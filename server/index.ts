@@ -3,11 +3,13 @@ import cookieParser from "cookie-parser";
 import express from "express";
 import fs from "node:fs";
 import path from "node:path";
+import { bootstrap } from "./bootstrap";
 import { runMigrations } from "./db";
 import { appRouter } from "./routers";
 import { createContext } from "./trpc";
 
 runMigrations();
+await bootstrap();
 
 const app = express();
 app.use(cookieParser());

@@ -1,4 +1,5 @@
 import { hashSenha } from "./auth";
+import { CATEGORIAS_PADRAO } from "./bootstrap";
 import { db, runMigrations } from "./db";
 import { anuncios, artigosBlog, avaliacoes, categorias, empresas, leads, mensagensChat, usuarios } from "./schema";
 
@@ -24,20 +25,7 @@ const [admin, sindico, morador, administradora] = db
 
 const cats = db
   .insert(categorias)
-  .values([
-    { nome: "Elevadores", icone: "ArrowUpDown" },
-    { nome: "Portaria e Segurança", icone: "ShieldCheck" },
-    { nome: "Limpeza", icone: "Sparkles" },
-    { nome: "Jardinagem", icone: "Trees" },
-    { nome: "Elétrica", icone: "Zap" },
-    { nome: "Hidráulica", icone: "Droplets" },
-    { nome: "Pintura e Fachada", icone: "PaintRoller" },
-    { nome: "Piscinas", icone: "Waves" },
-    { nome: "Dedetização", icone: "Bug" },
-    { nome: "Contabilidade", icone: "Calculator" },
-    { nome: "Advocacia Condominial", icone: "Scale" },
-    { nome: "Câmeras e CFTV", icone: "Cctv" },
-  ])
+  .values(CATEGORIAS_PADRAO)
   .returning()
   .all();
 const cat = (nome: string) => cats.find((c) => c.nome === nome)!.id;
