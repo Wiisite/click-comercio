@@ -1,4 +1,5 @@
-import { Building2, Check, FileText, Megaphone, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Building2, Check, FileText, Megaphone, Pencil, Plus, Sparkles, Trash2, X } from "lucide-react";
+import { Banner, ICONES_ANUNCIO, MiniaturaAnuncio } from "@/components/Anuncio";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { Link } from "wouter";
@@ -170,58 +171,181 @@ function Artigos() {
   );
 }
 
+const ROTULO_POSICAO = { home: "Home", servicos: "Serviços / categorias", blog: "Blog" } as const;
+const TEMAS_FORM = ["marca", "coral", "verde", "azul", "escuro"] as const;
+type FormAnuncio = {
+  id?: string; titulo: string; texto: string; link: string; posicao: "home" | "servicos" | "blog";
+  formato: "horizontal" | "lateral"; categoriaId: string; anunciante: string; cta: string; preco: string;
+  imagemUrl: string; icone: string; tema: (typeof TEMAS_FORM)[number];
+};
+const anuncioVazio: FormAnuncio = {
+  titulo: "", texto: "", link: "", posicao: "home", formato: "horizontal", categoriaId: "", anunciante: "",
+  cta: "Comprar agora", preco: "", imagemUrl: "", icone: "ShoppingBag", tema: "marca",
+};
+
 function Anuncios() {
   const utils = trpc.useUtils();
   const { data, isLoading } = trpc.admin.anuncios.useQuery();
-  const [form, setForm] = useState({ titulo: "", texto: "", link: "", posicao: "home" as "home" | "servicos" | "blog" });
-  const criar = trpc.admin.criarAnuncio.useMutation();
-  const alternar = trpc.admin.alternarAnuncio.useMutation({ onSuccess: () => utils.admin.anuncios.invalidate() });
+  const categorias = trpc.categorias.listar.useQuery();
+  const [form, setForm] = useState<FormAnuncio | null>(null);
+  const atualizar = () => {
+    utils.admin.anuncios.invalidate();
+    utils.anuncios.invalidate();
+  };
+  const salvar = trpc.admin.salvarAnuncio.useMutation();
+  const alternar = trpc.admin.alternarAnuncio.useMutation({ onSuccess: atualizar });
+  const excluir = trpc.admin.excluirAnuncio.useMutation({ onSuccess: atualizar });
+  const exemplos = trpc.admin.criarAnunciosExemplo.useMutation({
+    onSuccess: (r) => {
+      toast.success(`${r.criados} anúncios de exemplo criados. Veja na Home e nas categorias!`);
+      atualizar();
+    },
+  });
 
   async function enviar(e: FormEvent) {
     e.preventDefault();
     const r = anuncioSchema.safeParse(form);
     if (!r.success) return toast.error(r.error.issues[0].message);
     try {
-      await criar.mutateAsync(r.data);
-      setForm({ titulo: "", texto: "", link: "", posicao: "home" });
-      utils.admin.anuncios.invalidate();
-      toast.success("Anúncio criado.");
+      await salvar.mutateAsync(r.data);
+      toast.success("Anúncio salvo.");
+      setForm(null);
+      atualizar();
     } catch (err) {
       toast.error(mensagemErro(err));
     }
   }
 
   if (isLoading) return <Carregando />;
+  const totalCliques = data?.reduce((s, a) => s + a.cliques, 0) ?? 0;
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
-      <div className="cartao divide-y divide-slate-100">
-        {data?.map((a) => (
-          <div key={a.id} className="flex items-center gap-4 p-4">
-            <div className="min-w-0 flex-1">
-              <div className="font-semibold">{a.titulo}</div>
-              <div className="truncate text-xs text-slate-400">{a.posicao} · {a.link}</div>
-            </div>
-            <button
-              onClick={() => alternar.mutate({ id: a.id, ativo: !a.ativo })}
-              className={cn("selo px-3 py-1", a.ativo ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500")}
-            >
-              {a.ativo ? "Ativo" : "Pausado"}
-            </button>
-          </div>
-        ))}
+    <>
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <button className="btn-primario" onClick={() => setForm(anuncioVazio)}><Plus className="h-4 w-4" /> Novo anúncio</button>
+        <button className="btn-contorno" disabled={exemplos.isPending} onClick={() => exemplos.mutate()}>
+          <Sparkles className="h-4 w-4" /> Criar anúncios de exemplo
+        </button>
+        <Link href="/anuncie" className="btn-fantasma">Página “Anuncie” →</Link>
+        <span className="ml-auto text-sm text-slate-500">{data?.length ?? 0} anúncios · {totalCliques} cliques</span>
       </div>
-      <form onSubmit={enviar} className="cartao h-fit space-y-3 p-5">
-        <h2 className="font-bold">Novo anúncio</h2>
-        <input className="campo" placeholder="Título" value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} />
-        <input className="campo" placeholder="Texto (opcional)" value={form.texto} onChange={(e) => setForm({ ...form, texto: e.target.value })} />
-        <input className="campo" placeholder="https://link-do-anunciante" value={form.link} onChange={(e) => setForm({ ...form, link: e.target.value })} />
-        <select className="campo" value={form.posicao} onChange={(e) => setForm({ ...form, posicao: e.target.value as typeof form.posicao })}>
-          <option value="home">Home</option>
-          <option value="servicos">Lista de serviços</option>
-          <option value="blog">Blog</option>
-        </select>
-        <button className="btn-primario w-full" disabled={criar.isPending}><Plus className="h-4 w-4" /> Criar anúncio</button>
-      </form>
-    </div>
+      {!data?.length ? (
+        <div className="cartao py-16 text-center text-slate-400">
+          <Megaphone className="mx-auto mb-3 h-10 w-10" />
+          Nenhum anúncio. Crie um ou gere os exemplos para apresentar ao cliente.
+        </div>
+      ) : (
+        <div className="cartao divide-y divide-slate-100">
+          {data.map((a) => (
+            <div key={a.id} className={cn("flex flex-wrap items-center gap-4 p-4", !a.ativo && "opacity-50")}>
+              <MiniaturaAnuncio anuncio={a} />
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold">{a.titulo}</div>
+                <div className="mt-1 flex flex-wrap gap-1.5 text-xs">
+                  <span className="selo bg-slate-100 text-slate-600">{ROTULO_POSICAO[a.posicao]}</span>
+                  <span className="selo bg-slate-100 text-slate-600">{a.formato === "lateral" ? "Lateral" : "Horizontal"}</span>
+                  {a.categoria && <span className="selo bg-marca-50 text-marca-700">{a.categoria.nome}</span>}
+                  <span className="selo bg-amber-50 text-amber-700">{a.cliques} cliques</span>
+                </div>
+              </div>
+              <button
+                onClick={() => alternar.mutate({ id: a.id, ativo: !a.ativo })}
+                className={cn("selo px-3 py-1", a.ativo ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500")}
+              >
+                {a.ativo ? "Ativo" : "Pausado"}
+              </button>
+              <button
+                className="btn-fantasma p-2"
+                aria-label="Editar"
+                onClick={() => setForm({
+                  id: a.id, titulo: a.titulo, texto: a.texto ?? "", link: a.link, posicao: a.posicao, formato: a.formato,
+                  categoriaId: a.categoriaId ?? "", anunciante: a.anunciante ?? "", cta: a.cta ?? "", preco: a.preco ?? "",
+                  imagemUrl: a.imagemUrl ?? "", icone: a.icone ?? "", tema: a.tema,
+                })}
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button
+                className="btn-fantasma p-2 text-rose-600"
+                aria-label="Excluir"
+                onClick={() => confirm(`Excluir “${a.titulo}”?`) && excluir.mutate({ id: a.id })}
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Modal aberto={!!form} onFechar={() => setForm(null)} titulo={form?.id ? "Editar anúncio" : "Novo anúncio"}>
+        {form && (
+          <form onSubmit={enviar} className="space-y-4">
+            <div className={form.formato === "lateral" ? "mx-auto max-w-64" : ""}>
+              <Banner
+                preview
+                formato={form.formato}
+                anuncio={{ ...form, titulo: form.titulo || "Título do anúncio", texto: form.texto || null, anunciante: form.anunciante || null, cta: form.cta || null, preco: form.preco || null, imagemUrl: form.imagemUrl || null, icone: form.icone || null }}
+              />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Campo rotulo="Página">
+                <select className="campo" value={form.posicao} onChange={(e) => setForm({ ...form, posicao: e.target.value as FormAnuncio["posicao"] })}>
+                  {Object.entries(ROTULO_POSICAO).map(([v, r]) => <option key={v} value={v}>{r}</option>)}
+                </select>
+              </Campo>
+              <Campo rotulo="Formato">
+                <select className="campo" value={form.formato} onChange={(e) => setForm({ ...form, formato: e.target.value as FormAnuncio["formato"] })}>
+                  <option value="horizontal">Horizontal (central)</option>
+                  <option value="lateral">Lateral</option>
+                </select>
+              </Campo>
+            </div>
+            {form.posicao === "servicos" && (
+              <Campo rotulo="Categoria (vazio = todas)">
+                <select className="campo" value={form.categoriaId} onChange={(e) => setForm({ ...form, categoriaId: e.target.value })}>
+                  <option value="">Todas as categorias</option>
+                  {categorias.data?.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                </select>
+              </Campo>
+            )}
+            <Campo rotulo="Título"><input className="campo" value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} /></Campo>
+            <Campo rotulo="Texto"><input className="campo" value={form.texto} onChange={(e) => setForm({ ...form, texto: e.target.value })} /></Campo>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Campo rotulo="Anunciante"><input className="campo" value={form.anunciante} onChange={(e) => setForm({ ...form, anunciante: e.target.value })} /></Campo>
+              <Campo rotulo="Preço"><input className="campo" placeholder="R$ 99,90" value={form.preco} onChange={(e) => setForm({ ...form, preco: e.target.value })} /></Campo>
+              <Campo rotulo="Botão"><input className="campo" value={form.cta} onChange={(e) => setForm({ ...form, cta: e.target.value })} /></Campo>
+            </div>
+            <Campo rotulo="Link de destino"><input className="campo" placeholder="https://loja.com/produto" value={form.link} onChange={(e) => setForm({ ...form, link: e.target.value })} /></Campo>
+            <Campo rotulo="Imagem do produto (URL, opcional — substitui o ícone)">
+              <input className="campo" placeholder="https://…" value={form.imagemUrl} onChange={(e) => setForm({ ...form, imagemUrl: e.target.value })} />
+            </Campo>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Campo rotulo="Ícone">
+                <select className="campo" value={form.icone} onChange={(e) => setForm({ ...form, icone: e.target.value })}>
+                  {Object.keys(ICONES_ANUNCIO).map((i) => <option key={i}>{i}</option>)}
+                </select>
+              </Campo>
+              <Campo rotulo="Cor">
+                <div className="flex gap-2 pt-1">
+                  {TEMAS_FORM.map((t) => (
+                    <button
+                      type="button"
+                      key={t}
+                      aria-label={t}
+                      onClick={() => setForm({ ...form, tema: t })}
+                      className={cn(
+                        "h-9 w-9 rounded-full bg-gradient-to-br ring-offset-2 transition",
+                        { marca: "from-marca-700 to-marca-500", coral: "from-coral-600 to-amber-400", verde: "from-emerald-700 to-teal-500", azul: "from-sky-800 to-cyan-500", escuro: "from-tinta to-marca-900" }[t],
+                        form.tema === t && "ring-2 ring-marca-600",
+                      )}
+                    />
+                  ))}
+                </div>
+              </Campo>
+            </div>
+            <button className="btn-primario w-full" disabled={salvar.isPending}>Salvar anúncio</button>
+          </form>
+        )}
+      </Modal>
+    </>
   );
 }

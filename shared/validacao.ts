@@ -64,11 +64,52 @@ export const artigoSchema = z.object({
 });
 
 export const anuncioSchema = z.object({
-  titulo: z.string().trim().min(3).max(120),
+  id: z.string().optional(),
+  titulo: z.string().trim().min(3, "Informe o título").max(120),
   texto: z.string().trim().max(255).optional(),
-  link: z.url("URL inválida"),
+  link: z.url("Link inválido"),
   posicao: z.enum(["home", "servicos", "blog"]),
+  formato: z.enum(["horizontal", "lateral"]),
+  categoriaId: z.string().optional(),
+  anunciante: z.string().trim().max(100).optional(),
+  cta: z.string().trim().max(40).optional(),
+  preco: z.string().trim().max(40).optional(),
+  imagemUrl: z.url("URL da imagem inválida").optional().or(z.literal("")),
+  icone: z.string().max(40).optional(),
+  tema: z.enum(["marca", "coral", "verde", "azul", "escuro"]),
 });
+
+/** Formatos vendidos na página /anuncie (valores de referência — ajuste à sua tabela). */
+export const FORMATOS_VENDA = [
+  {
+    id: "home-central",
+    nome: "Banner central da Home",
+    onde: "Página inicial, entre as seções principais",
+    medida: "1200 × 250 px",
+    preco: "R$ 490/mês",
+  },
+  {
+    id: "home-lateral",
+    nome: "Banner lateral da Home",
+    onde: "Coluna ao lado das empresas mais bem avaliadas",
+    medida: "300 × 400 px",
+    preco: "R$ 290/mês",
+  },
+  {
+    id: "categoria",
+    nome: "Patrocinador de categoria",
+    onde: "Topo e lateral da categoria escolhida + páginas das empresas dela",
+    medida: "1200 × 250 px e 300 × 400 px",
+    preco: "R$ 390/mês",
+  },
+  {
+    id: "blog",
+    nome: "Banner no Blog",
+    onde: "Lista de artigos e final de cada artigo",
+    medida: "1200 × 250 px",
+    preco: "R$ 190/mês",
+  },
+] as const;
 
 export const PLANOS_INFO = {
   free: { nome: "Free", preco: "Grátis", beneficios: ["Perfil na busca", "Receber orçamentos", "Avaliações de clientes"] },

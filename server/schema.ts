@@ -105,13 +105,27 @@ export const artigosBlog = sqliteTable("artigos_blog", {
   criadoEm: criadoEm(),
 });
 
-// Funcionalidade 10 do PRD: exibição de anúncios
+// Funcionalidade 10 do PRD: espaços de anúncio vendidos para produtos e serviços
+export const POSICOES_ANUNCIO = ["home", "servicos", "blog"] as const;
+export const FORMATOS_ANUNCIO = ["horizontal", "lateral"] as const;
+export const TEMAS_ANUNCIO = ["marca", "coral", "verde", "azul", "escuro"] as const;
+
 export const anuncios = sqliteTable("anuncios", {
   id: id(),
   titulo: text("titulo", { length: 120 }).notNull(),
   texto: text("texto", { length: 255 }),
   link: text("link", { length: 500 }).notNull(),
-  posicao: text("posicao", { enum: ["home", "servicos", "blog"] }).notNull(),
+  posicao: text("posicao", { enum: POSICOES_ANUNCIO }).notNull(),
+  formato: text("formato", { enum: FORMATOS_ANUNCIO }).notNull().default("horizontal"),
+  // Quando preenchido, o anúncio aparece só nas páginas dessa categoria
+  categoriaId: text("categoria_id").references(() => categorias.id, { onDelete: "set null" }),
+  anunciante: text("anunciante", { length: 100 }),
+  cta: text("cta", { length: 40 }),
+  preco: text("preco", { length: 40 }),
+  imagemUrl: text("imagem_url", { length: 500 }),
+  icone: text("icone", { length: 40 }),
+  tema: text("tema", { enum: TEMAS_ANUNCIO }).notNull().default("marca"),
+  cliques: integer("cliques").notNull().default(0),
   ativo: integer("ativo", { mode: "boolean" }).notNull().default(true),
   criadoEm: criadoEm(),
 });
@@ -140,6 +154,9 @@ export const leadsRelations = relations(leads, ({ one, many }) => ({
 export const mensagensChatRelations = relations(mensagensChat, ({ one }) => ({
   lead: one(leads, { fields: [mensagensChat.leadId], references: [leads.id] }),
   remetente: one(usuarios, { fields: [mensagensChat.remetenteId], references: [usuarios.id] }),
+}));
+export const anunciosRelations = relations(anuncios, ({ one }) => ({
+  categoria: one(categorias, { fields: [anuncios.categoriaId], references: [categorias.id] }),
 }));
 export const artigosBlogRelations = relations(artigosBlog, ({ one }) => ({
   autor: one(usuarios, { fields: [artigosBlog.autorId], references: [usuarios.id] }),

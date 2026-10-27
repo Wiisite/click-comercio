@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, asc, count, desc, eq, gte, like, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, isNull, like, or, sql, type SQL } from "drizzle-orm";
 import { z } from "zod";
 import {
   anuncioSchema,
@@ -10,6 +10,7 @@ import {
   leadSchema,
   loginSchema,
 } from "../shared/validacao";
+import { criarAnunciosExemplo } from "./anunciosExemplo";
 import { COOKIE_NAME, conferirSenha, cookieOpcoes, criarToken, hashSenha } from "./auth";
 import { db } from "./db";
 import {
@@ -381,15 +382,39 @@ const blogRouter = router({
 });
 
 const anunciosRouter = router({
-  porPosicao: publicProcedure
-    .input(z.object({ posicao: z.enum(["home", "servicos", "blog"]) }))
-    .query(({ input }) =>
-      db.query.anuncios.findMany({
-        where: and(eq(anuncios.posicao, input.posicao), eq(anuncios.ativo, true)),
-        orderBy: sql`random()`,
-        limit: 1,
+  /** Anúncios ativos de um espaço; na categoria, os segmentados vêm primeiro. */
+  listar: publicProcedure
+    .input(
+      z.object({
+        posicao: z.enum(["home", "servicos", "blog"]),
+        formato: z.enum(["horizontal", "lateral"]),
+        categoriaId: z.string().optional(),
       }),
+    )
+    .query(({ input }) =>
+      db
+        .select()
+        .from(anuncios)
+        .where(
+          and(
+            eq(anuncios.ativo, true),
+            eq(anuncios.posicao, input.posicao),
+            eq(anuncios.formato, input.formato),
+            input.categoriaId
+              ? or(isNull(anuncios.categoriaId), eq(anuncios.categoriaId, input.categoriaId))
+              : isNull(anuncios.categoriaId),
+          ),
+        )
+        .orderBy(sql`${anuncios.categoriaId} is null`, sql`random()`),
     ),
+
+  registrarClique: publicProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
+    await db
+      .update(anuncios)
+      .set({ cliques: sql`${anuncios.cliques} + 1` })
+      .where(eq(anuncios.id, input.id));
+    return { ok: true };
+  }),
 });
 
 const adminRouter = router({
@@ -427,9 +452,26 @@ const adminRouter = router({
     return { ok: true };
   }),
 
-  anuncios: adminProcedure.query(() => db.query.anuncios.findMany({ orderBy: desc(anuncios.criadoEm) })),
-  criarAnuncio: adminProcedure.input(anuncioSchema).mutation(async ({ input }) => {
-    await db.insert(anuncios).values({ ...input, texto: input.texto || null });
+  anuncios: adminProcedure.query(() =>
+    db.query.anuncios.findMany({
+      orderBy: [asc(anuncios.posicao), desc(anuncios.criadoEm)],
+      with: { categoria: { columns: { nome: true } } },
+    }),
+  ),
+  salvarAnuncio: adminProcedure.input(anuncioSchema).mutation(async ({ input }) => {
+    const { id, ...dados } = input;
+    const valores = {
+      ...dados,
+      categoriaId: dados.categoriaId || null,
+      texto: dados.texto || null,
+      anunciante: dados.anunciante || null,
+      cta: dados.cta || null,
+      preco: dados.preco || null,
+      imagemUrl: dados.imagemUrl || null,
+      icone: dados.icone || null,
+    };
+    if (id) await db.update(anuncios).set(valores).where(eq(anuncios.id, id));
+    else await db.insert(anuncios).values(valores);
     return { ok: true };
   }),
   alternarAnuncio: adminProcedure
@@ -438,6 +480,11 @@ const adminRouter = router({
       await db.update(anuncios).set({ ativo: input.ativo }).where(eq(anuncios.id, input.id));
       return { ok: true };
     }),
+  excluirAnuncio: adminProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
+    await db.delete(anuncios).where(eq(anuncios.id, input.id));
+    return { ok: true };
+  }),
+  criarAnunciosExemplo: adminProcedure.mutation(() => ({ criados: criarAnunciosExemplo() })),
 });
 
 export const appRouter = router({

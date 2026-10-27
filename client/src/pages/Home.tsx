@@ -1,7 +1,7 @@
 import { ArrowRight, BadgeCheck, ChevronLeft, ChevronRight, MessageCircle, Search, Star, Zap } from "lucide-react";
 import { useRef, useState, type FormEvent } from "react";
 import { Link, useLocation } from "wouter";
-import { Anuncio } from "@/components/Anuncio";
+import { EspacoAnuncio } from "@/components/Anuncio";
 import { EmpresaCard, EmpresaCardEsqueleto } from "@/components/EmpresaCard";
 import { corCategoria, Icone } from "@/components/Icone";
 import { LeadModal } from "@/components/LeadModal";
@@ -112,10 +112,16 @@ function MaisBemAvaliadas() {
           Ver todas <ArrowRight className="h-4 w-4" />
         </Link>
       </Titulo>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {isLoading
-          ? Array.from({ length: 6 }, (_, i) => <EmpresaCardEsqueleto key={i} />)
-          : data?.map((e) => <EmpresaCard key={e.id} empresa={e} />)}
+      <div className="grid gap-6 lg:grid-cols-[1fr_18rem]">
+        <div className="grid content-start gap-4 sm:grid-cols-2">
+          {isLoading
+            ? Array.from({ length: 6 }, (_, i) => <EmpresaCardEsqueleto key={i} />)
+            : data?.map((e) => <EmpresaCard key={e.id} empresa={e} />)}
+        </div>
+        <aside className="grid content-start gap-4 sm:grid-cols-2 lg:grid-cols-1">
+          <EspacoAnuncio posicao="home" formato="lateral" indice={0} />
+          <EspacoAnuncio posicao="home" formato="lateral" indice={1} />
+        </aside>
       </div>
     </section>
   );
@@ -209,9 +215,10 @@ export default function Home() {
       <Hero />
       <Categorias />
       <Carrossel />
-      <section className="container-site mt-10"><Anuncio posicao="home" /></section>
+      <section className="container-site mt-10"><EspacoAnuncio posicao="home" formato="horizontal" indice={0} /></section>
       <MaisBemAvaliadas />
       <ComoFunciona onOrcamento={() => setLeadAberto(true)} />
+      <section className="container-site mt-16"><EspacoAnuncio posicao="home" formato="horizontal" indice={1} /></section>
       <ArtigosRecentes />
       <LeadModal aberto={leadAberto} onFechar={() => setLeadAberto(false)} />
     </>

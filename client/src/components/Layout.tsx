@@ -11,6 +11,7 @@ const links = [
   { href: "/servicos", rotulo: "Serviços" },
   { href: "/blog", rotulo: "Blog" },
   { href: "/#como-funciona", rotulo: "Como funciona" },
+  { href: "/anuncie", rotulo: "Anuncie" },
 ];
 
 function MenuUsuario() {
@@ -179,6 +180,7 @@ function Footer() {
             <li><Link href="/blog" className="hover:text-white">Blog</Link></li>
             <li><Link href="/cadastro?tipo=prestador" className="hover:text-white">Cadastrar minha empresa</Link></li>
             <li><Link href="/dashboard" className="hover:text-white">Planos para empresas</Link></li>
+            <li><Link href="/anuncie" className="hover:text-white">Anuncie seus produtos</Link></li>
           </ul>
         </div>
         <div>

@@ -1,6 +1,6 @@
 import { ArrowLeft, Search } from "lucide-react";
 import { Link, useParams } from "wouter";
-import { Anuncio } from "@/components/Anuncio";
+import { EspacoAnuncio } from "@/components/Anuncio";
 import { Carregando } from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
 import { formatarData } from "@/lib/utils";
@@ -33,7 +33,7 @@ export default function Artigo() {
         <p className="mt-1 text-slate-600">Compare empresas avaliadas por outros síndicos.</p>
         <Link href="/servicos" className="btn-primario mt-5"><Search className="h-4 w-4" /> Buscar serviços</Link>
       </div>
-      <div className="mt-8"><Anuncio posicao="blog" /></div>
+      <div className="mt-8"><EspacoAnuncio posicao="blog" formato="horizontal" /></div>
     </article>
   );
 }

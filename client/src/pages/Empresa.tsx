@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { Link, useParams } from "wouter";
 import { linkWhatsapp } from "@shared/validacao";
+import { EspacoAnuncio } from "@/components/Anuncio";
 import { Estrelas, SeletorEstrelas } from "@/components/Estrelas";
 import { Carregando } from "@/components/Layout";
 import { LeadModal } from "@/components/LeadModal";
@@ -64,8 +65,8 @@ export default function Empresa() {
             <Avaliacoes empresaId={empresa.id} ehDono={usuario?.id === empresa.usuarioId} />
           </div>
 
-          <aside>
-            <div className="cartao sticky top-24 space-y-3 p-6">
+          <aside className="space-y-4">
+            <div className="cartao space-y-3 p-6">
               <h2 className="font-bold">Fale com a empresa</h2>
               <a href={linkWhatsapp(empresa.whatsapp, empresa.nomeEmpresa)} target="_blank" rel="noopener noreferrer" className="btn-whats w-full py-3">
                 <MessageCircle className="h-5 w-5" /> Conversar no WhatsApp
@@ -85,6 +86,7 @@ export default function Empresa() {
                 )}
               </div>
             </div>
+            <EspacoAnuncio posicao="servicos" formato="lateral" categoriaId={empresa.categoriaId} />
           </aside>
         </div>
       </div>

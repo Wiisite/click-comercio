@@ -3,6 +3,7 @@ import { Toaster } from "sonner";
 import { Route, Switch, useLocation } from "wouter";
 import { Layout } from "./components/Layout";
 import Admin from "./pages/Admin";
+import Anuncie from "./pages/Anuncie";
 import Artigo from "./pages/Artigo";
 import Blog from "./pages/Blog";
 import Dashboard from "./pages/Dashboard";
@@ -36,6 +37,7 @@ export default function App() {
         <Route path="/blog" component={Blog} />
         <Route path="/blog/:id" component={Artigo} />
         <Route path="/admin" component={Admin} />
+        <Route path="/anuncie" component={Anuncie} />
         <Route component={NaoEncontrado} />
       </Switch>
       <Toaster position="top-center" richColors />

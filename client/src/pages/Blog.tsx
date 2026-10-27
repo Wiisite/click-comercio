@@ -1,6 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import { useLocation, useSearch, Link } from "wouter";
-import { Anuncio } from "@/components/Anuncio";
+import { EspacoAnuncio } from "@/components/Anuncio";
 import { trpc } from "@/lib/trpc";
 import { cn, formatarData } from "@/lib/utils";
 import { CartaoArtigo } from "./Home";
@@ -53,7 +53,7 @@ export default function Blog() {
         </div>
       )}
 
-      <div className="mb-8"><Anuncio posicao="blog" /></div>
+      <div className="mb-8"><EspacoAnuncio posicao="blog" formato="horizontal" /></div>
 
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {demais.map((a) => <CartaoArtigo key={a.id} artigo={a} />)}

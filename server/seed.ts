@@ -1,4 +1,5 @@
 import { hashSenha } from "./auth";
+import { criarAnunciosExemplo } from "./anunciosExemplo";
 import { CATEGORIAS_PADRAO } from "./bootstrap";
 import { db, runMigrations } from "./db";
 import { anuncios, artigosBlog, avaliacoes, categorias, empresas, leads, mensagensChat, usuarios } from "./schema";
@@ -152,13 +153,7 @@ for (const [titulo, categoria, destaque, resumo] of artigos) {
     .run();
 }
 
-db.insert(anuncios)
-  .values([
-    { titulo: "Seguro condominial com 15% off", texto: "Cote agora com as principais seguradoras.", link: "https://exemplo.com/seguro", posicao: "home" },
-    { titulo: "Software de gestão para síndicos", texto: "Teste grátis por 30 dias.", link: "https://exemplo.com/software", posicao: "servicos" },
-    { titulo: "Curso de síndico profissional", texto: "Certificado reconhecido. Turmas abertas.", link: "https://exemplo.com/curso", posicao: "blog" },
-  ])
-  .run();
+criarAnunciosExemplo();
 
 console.log("Seed concluído. Senha de todos os usuários: senha1234");
 console.log("  admin@clickcomercio.com.br (admin) · sindico@exemplo.com · prestador1@exemplo.com");

@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight, SearchX, SlidersHorizontal, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useSearch } from "wouter";
-import { Anuncio } from "@/components/Anuncio";
+import { EspacoAnuncio } from "@/components/Anuncio";
 import { EmpresaCard, EmpresaCardEsqueleto } from "@/components/EmpresaCard";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
@@ -125,8 +125,8 @@ export default function Servicos() {
       {filtrosMobile && <div className="cartao animar-entrada mb-6 p-5 lg:hidden">{painelFiltros}</div>}
 
       <div className="grid gap-8 lg:grid-cols-[16rem_1fr]">
-        <aside className="hidden lg:block">
-          <div className="cartao sticky top-24 p-5">
+        <aside className="hidden space-y-4 lg:block">
+          <div className="cartao p-5">
             {painelFiltros}
             {temFiltro ? (
               <button onClick={() => navegar("/servicos", { replace: true })} className="btn-fantasma mt-6 w-full text-rose-600">
@@ -134,10 +134,12 @@ export default function Servicos() {
               </button>
             ) : null}
           </div>
+          <EspacoAnuncio posicao="servicos" formato="lateral" categoriaId={filtros.categoria || undefined} indice={0} />
+          <EspacoAnuncio posicao="servicos" formato="lateral" categoriaId={filtros.categoria || undefined} indice={1} />
         </aside>
 
         <div className={cn("transition-opacity", isFetching && !isLoading && "opacity-60")}>
-          <div className="mb-6"><Anuncio posicao="servicos" /></div>
+          <div className="mb-6"><EspacoAnuncio posicao="servicos" formato="horizontal" categoriaId={filtros.categoria || undefined} /></div>
           {isLoading ? (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {Array.from({ length: 6 }, (_, i) => <EmpresaCardEsqueleto key={i} />)}
